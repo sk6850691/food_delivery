@@ -7,7 +7,7 @@ import 'package:food_delivery/scr/models/user.dart';
 
 import 'package:food_delivery/scr/models/userservice.dart';
 enum Status{ Uninitialized,Unauthenticated, Authenticating,Authenticated}
-class AuthProvider with ChangeNotifier{
+class User with ChangeNotifier{
   FirebaseAuth _auth;
   FirebaseUser _user;
   Status _status = Status.Uninitialized;
@@ -24,7 +24,7 @@ class AuthProvider with ChangeNotifier{
   TextEditingController name = TextEditingController();
   TextEditingController password = TextEditingController();
 
-  AuthProvider.initialize(): _auth = FirebaseAuth.instance{
+  User.initialize(): _auth = FirebaseAuth.instance{
     _auth.onAuthStateChanged.listen(_onStateChanged);
   }
   //initialize is a named constructor
@@ -53,7 +53,9 @@ class AuthProvider with ChangeNotifier{
         _firestore.collection('users').document(result.user.uid).setData({
           'name':name.text,
           'email':email.text,
-          'uid': result.user.uid
+          'uid': result.user.uid,
+          "likedFood":[],
+          "likedRestraunts":[]
 
         });
       });
@@ -72,12 +74,13 @@ class AuthProvider with ChangeNotifier{
 
   Future<Void> _onStateChanged(FirebaseUser firebaseUser)async{
     if(firebaseUser == null){
-      _status = Status.Uninitialized;
+      _status = Status.Unauthenticated;
     }else{
       _user = firebaseUser;
       _status = Status.Authenticated;
       _userModel = await _userService.getUserById(firebaseUser.uid);
     }
+   notifyListeners();
   }
 
 
